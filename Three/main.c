@@ -1,10 +1,10 @@
 #define UNICODE
 #define _UNICODE
 
-#define DEBUG
+//#define DEBUG
 
 #include <windows.h>
-#include "sysmets.h"
+#include "devcaps.h"
 
 
 #ifdef DEBUG
@@ -22,7 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 	printf("TCHAR(%lu bytes) HINSTANCE(%lu bytes) WPARAM(%lu bytes)\n",
 		(unsigned long) sizeof(TCHAR),(unsigned long) sizeof(HINSTANCE),(unsigned long) sizeof(WPARAM));
 	#endif // DEBUG
-               static TCHAR szAppName[] = TEXT("SysMets1ç");
+               static TCHAR szAppName[] = TEXT("DevCaps1");
 
                HWND           hwnd;
                MSG                msg;
@@ -44,9 +44,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 		return -1;
 	}
 
-	TCHAR name[] = TEXT("Get sysMetrics No.1ç");
+	TCHAR name[] = TEXT("Device Capabilities");
 	hwnd = CreateWindow(szAppName,name,
-		WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL,
+		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,CW_USEDEFAULT,
 		CW_USEDEFAULT,CW_USEDEFAULT,
 		NULL, NULL, hInstance, NULL);
@@ -63,12 +63,11 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
 }
 LRESULT CALLBACK WndProc (HWND hwnd,UINT message,WPARAM wParam,LPARAM lParam)
 {
-	static int cxChar, cxCaps,cyChar, cyClient,cxClient, iMaxWidth;
+	static int cxChar, cxCaps,cyChar;
 	HDC hdc;
-	int i,x,y,iVertPos,iHorzPos, iPaintBeg, iPaintEnd;
-	PAINTSTRUCT ps;
-	SCROLLINFO si;
+	int i;
 	TCHAR szBuffer[10];
+	PAINTSTRUCT ps;
 	TEXTMETRIC tm;
 
 	switch(message)
@@ -84,145 +83,21 @@ LRESULT CALLBACK WndProc (HWND hwnd,UINT message,WPARAM wParam,LPARAM lParam)
 
 		ReleaseDC(hwnd,hdc);
 
-		iMaxWidth = 40 * cxChar + 22 * cxCaps;
-
-		return 0;
-	case WM_SIZE:
-		cyClient = HIWORD(lParam);
-		cxClient = LOWORD(lParam);
-
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_RANGE | SIF_PAGE;
-		si.nMin  = 0;
-		si.nMax  = NUMLINES - 1;
-		si.nPage = cyClient / cyChar;
-		SetScrollInfo(hwnd,SB_VERT,&si,TRUE);
-
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_RANGE | SIF_PAGE;
-		si.nMin  = 0;
-		si.nMax  = 2 + iMaxWidth / cxChar;
-		si.nPage = cxClient / cxChar;
-		SetScrollInfo(hwnd,SB_HORZ,&si,TRUE);
-
-		return 0;
-	case WM_MOUSEWHEEL:
-	case WM_VSCROLL:
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_ALL;
-		GetScrollInfo(hwnd,SB_VERT, &si);
-
-		iVertPos = si.nPos;
-		switch(LOWORD(wParam))
-		{
-		case SB_TOP:
-			si.nPos = si.nMin;
-			break;
-		case SB_BOTTOM:
-			si.nPos = si.nMax;
-			break;
-		case SB_LINEUP:
-		case WHEEL_DELTA:
-			if(GET_WHEEL_DELTA_WPARAM(wParam) == (-1) * WHEEL_DELTA){
-				si.nPos += 1;
-			}
-			else si.nPos -= 1;
-			break;
-		case SB_LINEDOWN:
-			si.nPos += 1;
-			break;
-		case SB_PAGEUP:
-			si.nPos -= si.nPage;
-			break;
-		case SB_PAGEDOWN:
-			si.nPos += si.nPage;
-			break;
-		case SB_THUMBTRACK:
-			si.nPos = si.nTrackPos;
-			break;
-		default:
-			break;
-		}
-
-		si.fMask = SIF_POS;
-		SetScrollInfo(hwnd, SB_VERT, &si,TRUE);
-		GetScrollInfo(hwnd,SB_VERT, &si);
-
-		if(si.nPos != iVertPos)
-		{
-			ScrollWindow(hwnd,0,cyChar * (iVertPos - si.nPos),
-				NULL,NULL);
-			UpdateWindow(hwnd);
-		}
-		return 0;
-	case WM_HSCROLL:
-
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_ALL;
-
-		GetScrollInfo(hwnd,SB_HORZ, &si);
-		iHorzPos = si.nPos;
-
-		switch(LOWORD(wParam))
-		{
-		case SB_LINELEFT:
-			si.nPos -= 1;
-			break;
-		case SB_LINERIGHT:
-			si.nPos += 1;
-			break;
-		case SB_PAGELEFT:
-			si.nPos -= si.nPage;
-			break;
-		case SB_PAGERIGHT:
-			si.nPos += si.nPage;
-			break;
-		case SB_THUMBTRACK: //SB_THUMBPOSITION não rastreia
-			si.nPos = si.nTrackPos;
-			break;
-		default:
-			break;
-		}
-
-		si.fMask = SIF_POS;
-		SetScrollInfo(hwnd,SB_HORZ,&si,TRUE);
-		GetScrollInfo(hwnd,SB_HORZ,&si);
-
-		if(si.nPos != iHorzPos)
-		{
-			ScrollWindow(hwnd,cxChar * (iHorzPos - si.nPos),
-				0,NULL,NULL);
-		}
 		return 0;
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd,&ps);
 
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_POS;
-		GetScrollInfo(hwnd,SB_VERT,&si);
-		iVertPos = si.nPos;
-
-		GetScrollInfo(hwnd,SB_HORZ,&si);
-		iHorzPos = si.nPos;
-
-		iPaintBeg = max (0,iVertPos + ps.rcPaint.top / cyChar);
-		iPaintEnd = min (NUMLINES - 1,
-			iVertPos + ps.rcPaint.bottom / cyChar);
-
-		for (i=iPaintBeg; i<=iPaintEnd; i++)
+		for (i=0; i<NUMLINES; i++)
 		{
-			x = cxChar * (1 - iHorzPos);
-			y = cyChar * (i - iVertPos);
+			TextOut(hdc,0, cyChar * i,devcaps[i].szLabel,lstrlen(devcaps[i].szLabel));
 
-			TextOut(hdc,x, y,sysmetrics[i].szLabel,lstrlen(sysmetrics[i].szLabel));
-
-			TextOut(hdc,x + 22 * cxCaps, y,sysmetrics[i].szDesc,lstrlen(sysmetrics[i].szDesc));
+			TextOut(hdc,14 * cxCaps, cyChar * i,devcaps[i].szDesc,lstrlen(devcaps[i].szDesc));
 
 			SetTextAlign(hdc,TA_RIGHT | TA_TOP);
 
-			TextOut(hdc,x + 22 * cxCaps + 40 * cxChar,
-				y,szBuffer,wsprintf(szBuffer,TEXT("%5d"),
-						GetSystemMetrics(sysmetrics[i].iIndex)
+			TextOut(hdc,14 * cxCaps + 35 * cxChar,
+				 cyChar * i,szBuffer,wsprintf(szBuffer,TEXT("%5d"),
+						GetDeviceCaps(hdc,devcaps[i].iIndex)
 			));
 
 			SetTextAlign(hdc,TA_LEFT | TA_TOP);
