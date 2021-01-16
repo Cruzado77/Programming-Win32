@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1610739643 source:d:\dev\programming win32\one\main.c
+	<tchar.h>
+	<windows.h>
+

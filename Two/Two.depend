@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1610765155 source:d:\dev\programming win32\two\main.c
+	<windows.h>
+	"sysmets.h"
+	<stdlib.h>
+	<stdio.h>
+
+1610754586 d:\dev\programming win32\two\sysmets.h
+	<windows.h>
+
