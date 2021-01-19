@@ -7,9 +7,6 @@
 #include <windows.h>
 #include <math.h>
 
-#define NUM	1000
-#define TWOPI  (2 * 3.14159)
-
 #ifdef DEBUG
 #include <stdlib.h>
 #include <stdio.h>
@@ -86,13 +83,16 @@ LRESULT CALLBACK WndProc (HWND hwnd,UINT message,WPARAM wParam,LPARAM lParam)
 {
 	static POINT apt[4];
 	static int cxClient, cyClient;
+	static HPEN hPen, hPenDel;
 	HDC hdc;
 	PAINTSTRUCT ps;
 
 	switch(message)
 	{
-//	case WM_CREATE:
-//		return 0;012
+	case WM_CREATE:
+		hPen = CreatePen(PS_SOLID,2,RGB(255,0,0));
+		hPenDel = CreatePen(PS_SOLID,2,RGB(255,255,255));
+		return 0;
 	case WM_SIZE:
 		cxClient = LOWORD(lParam);
 		cyClient = HIWORD(lParam);
@@ -117,7 +117,7 @@ LRESULT CALLBACK WndProc (HWND hwnd,UINT message,WPARAM wParam,LPARAM lParam)
 		{
 			hdc = GetDC(hwnd);
 
-			SelectObject(hdc,GetStockObject(WHITE_PEN));
+			SelectObject(hdc,hPenDel);
 			DrawBezier(hdc,apt);
 
 			if(wParam & MK_LBUTTON)
@@ -132,7 +132,7 @@ LRESULT CALLBACK WndProc (HWND hwnd,UINT message,WPARAM wParam,LPARAM lParam)
 				apt[2].y = HIWORD(lParam);
 			}
 
-			SelectObject(hdc, GetStockObject(BLACK_PEN));
+			SelectObject(hdc, hPen);
 			DrawBezier (hdc,apt);
 			ReleaseDC(hwnd,hdc);
 //			InvalidateRect(hwnd,NULL,TRUE);
@@ -143,11 +143,14 @@ LRESULT CALLBACK WndProc (HWND hwnd,UINT message,WPARAM wParam,LPARAM lParam)
 
 		hdc = BeginPaint(hwnd,&ps);
 
+		SelectObject(hdc, hPen);
 		DrawBezier(hdc,apt);
 
 		EndPaint(hwnd,&ps);
 		return 0;
 	case WM_DESTROY:
+		DeleteObject(hPen);
+		DeleteObject(hPenDel);
 		PostQuitMessage(0);
 		return 0;
 	}
