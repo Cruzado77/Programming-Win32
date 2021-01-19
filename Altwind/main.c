@@ -27,7 +27,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,i
                HWND           hwnd;
                MSG                msg;
                WNDCLASS   wndclass;
-               HBRUSH hBrush = CreateSolidBrush(RGB(0,60,10));
+               HBRUSH hBrush = CreateSolidBrush(RGB(230,255,250));
 
                wndclass.style                    = CS_HREDRAW | CS_VREDRAW;
                wndclass.lpfnWndProc    = WndProc;
