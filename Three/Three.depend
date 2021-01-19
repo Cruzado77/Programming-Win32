@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1610769847 source:d:\dev\programming win32\three\main.c
+1610771878 source:d:\dev\programming win32\three\main.c
 	<windows.h>
 	"devcaps.h"
 	<stdlib.h>
