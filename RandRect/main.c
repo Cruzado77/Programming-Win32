@@ -2,14 +2,18 @@
 #define _UNICODE
 
 #include <windows.h>
+#include <stdlib.h>
+
+int cxClient, cyClient;
 
 LRESULT CALLBACK WndProc(HWND,UINT,WPARAM,LPARAM);
+void DrawRectangle(HWND hwnd);
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
 		szCmdLine,int iCmdShow)
 {
-	static TCHAR szAppName[] = TEXT("WhatSize");
+	static TCHAR szAppName[] = TEXT("RandRect");
 	HWND hwnd;
 	MSG msg;
 	WNDCLASS wndclass;
@@ -27,7 +31,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
 
 	if(!RegisterClass(&wndclass)) return -1;
 
-	hwnd = CreateWindow (szAppName,TEXT("What Size is the Window?"),
+	hwnd = CreateWindow (szAppName,TEXT("Random Rectangles"),
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,CW_USEDEFAULT,
 			CW_USEDEFAULT, CW_USEDEFAULT,
@@ -35,10 +39,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR
 	 ShowWindow(hwnd,iCmdShow);
 	 UpdateWindow(hwnd);
 
-	 while (GetMessage(&msg,NULL,0,0))
+	 while (TRUE)
 	 {
-	 	TranslateMessage(&msg);
-	 	DispatchMessage(&msg);
+	 	if(PeekMessage(&msg,NULL,0,0,PM_REMOVE))
+		{
+			if(msg.message == WM_QUIT)
+				break;
+
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else
+			DrawRectangle(hwnd);
 	 }
 	 return msg.wParam;
 }
@@ -63,47 +75,11 @@ void Show (HWND hwnd,HDC hdc, int xText,int yText, int iMapMode,
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam,LPARAM lParam)
 {
-	static TCHAR szHeading [] =
-		TEXT("Mapping Mode               Left   Right    Top  Bottom");
-	static TCHAR szUndLine[] =
-		TEXT("------------------        -----    ------     ---      --------");
-	static int cxChar, cyChar;
-	HDC hdc;
-	PAINTSTRUCT ps;
-	TEXTMETRIC tm;
-
 	switch (message)
 	{
-	case WM_CREATE:
-		hdc = GetDC(hwnd);
-		SelectObject(hdc,GetStockObject(SYSTEM_FIXED_FONT));
-
-		GetTextMetrics(hdc,&tm);
-
-		cxChar = tm.tmAveCharWidth;
-		cyChar = tm.tmHeight + tm.tmExternalLeading;
-
-		ReleaseDC(hwnd,hdc);
-		return 0;
-	case WM_PAINT:
-		hdc = BeginPaint(hwnd,&ps);
-		SelectObject(hdc,GetStockObject(SYSTEM_FIXED_FONT));
-
-		SetMapMode(hdc,MM_ANISOTROPIC);
-		SetWindowExtEx(hdc,1,1,NULL);
-		SetViewportExtEx(hdc,cxChar,cyChar,NULL);
-
-		TextOut(hdc,1,1,szHeading,lstrlen(szHeading));
-		TextOut(hdc,1,2,szUndLine,lstrlen(szUndLine));
-
-		Show (hwnd, hdc, 1, 3, MM_TEXT, TEXT ("TEXT (pixels)")) ;
-		Show (hwnd, hdc, 1, 4, MM_LOMETRIC, TEXT ("LOMETRIC (.1 mm)")) ;
-		Show (hwnd, hdc, 1, 5, MM_HIMETRIC, TEXT ("HIMETRIC (.01 mm)")) ;
-		Show (hwnd, hdc, 1, 6, MM_LOENGLISH, TEXT ("LOENGLISH (.01 in)")) ;
-		Show (hwnd, hdc, 1, 7, MM_HIENGLISH, TEXT ("HIENGLISH (.001 in)")) ;
-		Show (hwnd, hdc, 1, 8, MM_TWIPS, TEXT ("TWIPS (1/1440 in)")) ;
-
-		EndPaint(hwnd,&ps);
+	case WM_SIZE:
+		cxClient = LOWORD(lParam);
+		cyClient = HIWORD(lParam);
 		return 0;
 
 	case WM_DESTROY:
@@ -111,4 +87,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam,LPARAM lParam)
 		return 0;
 	}
 	return DefWindowProc(hwnd,message,wParam,lParam);
+}
+
+void DrawRectangle(HWND hwnd)
+{
+	HBRUSH hBrush;
+	HDC hdc;
+	RECT rect;
+
+	if(cxClient == 0 || cyClient == 0)
+	{
+		return;
+	}
+
+	SetRect(&rect,rand () % cxClient, rand() % cyClient,
+		           rand()  % cxClient, rand() % cyClient);
+	hBrush = CreateSolidBrush(
+			RGB(rand() % 256, rand() % 256, rand() % 256));
+	hdc = GetDC(hwnd);
+
+	FillRect(hdc,&rect,hBrush);
+	ReleaseDC(hwnd,hdc);
+	DeleteObject(hBrush);
 }
